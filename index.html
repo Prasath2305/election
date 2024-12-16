@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Poll</title>
+    <!-- Use UMD scripts for Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        p {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        #voterName {
+            padding: 10px;
+            width: 300px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .role {
+            margin: 20px 0;
+        }
+        .role h2 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .candidates {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .candidate {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            width: 250px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            text-align: center;
+        }
+        .candidate img {
+            width: 100%;
+            height: auto;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Election Poll</h1>
+    <p>Enter your name and cast your vote:</p>
+    <input type="text" id="voterName" placeholder="Your Name" required>
+
+    <div class="role">
+        <h2>President</h2>
+        <div class="candidates">
+            <div class="candidate">
+                <img src="candidate1.jpg" alt="Candidate 1">
+                <h3>Candidate 1</h3>
+                <button onclick="vote('President', 'Candidate 1')">Vote</button>
+            </div>
+            <div class="candidate">
+                <img src="candidate2.jpg" alt="Candidate 2">
+                <h3>Candidate 2</h3>
+                <button onclick="vote('President', 'Candidate 2')">Vote</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="role">
+        <h2>Vice President</h2>
+        <div class="candidates">
+            <div class="candidate">
+                <img src="candidate1.jpg" alt="Candidate 1">
+                <h3>Candidate 1</h3>
+                <button onclick="vote('Vice President', 'Candidate 1')">Vote</button>
+            </div>
+            <div class="candidate">
+                <img src="candidate2.jpg" alt="Candidate 2">
+                <h3>Candidate 2</h3>
+                <button onclick="vote('Vice President', 'Candidate 2')">Vote</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repeat the structure for other roles -->
+    <div class="role">
+        <h2>Secretary</h2>
+        <div class="candidates">
+            <div class="candidate">
+                <img src="candidate1.jpg" alt="Candidate 1">
+                <h3>Candidate 1</h3>
+                <button onclick="vote('Secretary', 'Candidate 1')">Vote</button>
+            </div>
+            <div class="candidate">
+                <img src="candidate2.jpg" alt="Candidate 2">
+                <h3>Candidate 2</h3>
+                <button onclick="vote('Secretary', 'Candidate 2')">Vote</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="role">
+        <h2>Treasurer</h2>
+        <div class="candidates">
+            <div class="candidate">
+                <img src="candidate1.jpg" alt="Candidate 1">
+                <h3>Candidate 1</h3>
+                <button onclick="vote('Treasurer', 'Candidate 1')">Vote</button>
+            </div>
+            <div class="candidate">
+                <img src="candidate2.jpg" alt="Candidate 2">
+                <h3>Candidate 2</h3>
+                <button onclick="vote('Treasurer', 'Candidate 2')">Vote</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNE3c2kgw37PWj5gLQEVFDKUvTLJ4YJ_Y",
+            authDomain: "election-ae770.firebaseapp.com",
+            databaseURL: "https://election-ae770-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "election-ae770",
+            storageBucket: "election-ae770.appspot.com",
+            messagingSenderId: "642288438852",
+            appId: "1:642288438852:web:703eaec93b6e2e204d3b6c"
+        };
+        
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function vote(role, candidate) {
+            const voterName = document.getElementById('voterName').value.trim();
+            if (!voterName) {
+                alert('Please enter your name!');
+                return;
+            }
+
+            // Reference to check if the voter has already voted for this role
+            const voterRef = database.ref('voters/' + voterName);
+
+            voterRef.once('value').then(snapshot => {
+                if (snapshot.exists() && snapshot.val()[role]) {
+                    alert('You have already voted for ' + role + '!');
+                } else {
+                    // Save the vote for the specific role
+                    const voteRef = database.ref('votes/' + role);
+                    voteRef.child(candidate).push(voterName);
+
+                    // Mark the voter as voted for this role
+                    const updatedVotes = {};
+                    updatedVotes[role] = candidate;
+                    voterRef.update(updatedVotes);
+
+                    alert('Your vote for ' + role + ' has been successfully cast!');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
